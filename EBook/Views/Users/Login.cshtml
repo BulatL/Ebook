@@ -1,0 +1,24 @@
+﻿@model EBook.ViewModels.LoginViewModel
+@{
+	ViewData["Title"] = "Login";
+}
+
+<div class="container-fluid" style="margin-top:3em; text-align:center; color:white;">
+	<form  method="post">
+		<div style="margin-top:1em; margin-bottom:1em;">
+			<input asp-for="Username" id="userNameInput"  placeholder="Username"/><br />
+			<span asp-validation-for="Username" style="color:red; font-weight: bold;"></span>
+		</div>
+		<div style="margin-top:1em; margin-bottom:1em;">
+			<input type="password" asp-for="Password" id="passwordInput" placeholder="Password"/><br />
+			<span asp-validation-for="Password" style="color:red; font-weight: bold;"></span>
+		</div>
+		<button type="submit" class="btn btn-primary" style="width:5em; height:2.2em;">Login</button>
+	</form>
+	<br /><button type="submit" class="btn btn-danger" onclick="history.back()" style="width:5em; height:2.2em;">Cancel</button>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+

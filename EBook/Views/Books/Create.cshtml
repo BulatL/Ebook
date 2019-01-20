@@ -1,0 +1,71 @@
+﻿@model EBook.ViewModels.BookViewModel
+
+@{
+	ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Book</h4>
+<hr />
+<div class="row">
+	<div class="col-md-4">
+		<form asp-action="Create" enctype="multipart/form-data">
+			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+			<div class="form-group">
+				<label asp-for="Title" class="control-label"></label>
+				<input asp-for="Title" id="title" class="form-control" />
+				<span asp-validation-for="Title" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Author" class="control-label"></label>
+				<input asp-for="Author" id="author" class="form-control" />
+				<span asp-validation-for="Author" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Keywords" class="control-label"></label>
+				<input asp-for="Keywords" id="keywords" class="form-control" />
+				<span asp-validation-for="Keywords" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="PublicationYear" class="control-label"></label>
+				<input asp-for="PublicationYear" type="date" id="publicationYear" class="form-control" />
+				<span asp-validation-for="PublicationYear" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="FileName" class="control-label"></label>
+				<input asp-for="FileName" id="filename" class="form-control" readonly />
+				<span asp-validation-for="FileName" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="MIME" class="control-label"></label>
+				<input asp-for="MIME" id="mime" class="form-control" />
+				<span asp-validation-for="MIME" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label class="control-label">Category</label>
+				<select asp-for="CategoryId" class="form-control" asp-items="ViewBag.Category"></select>
+			</div>
+			<div class="form-group">
+				<label class="control-label">Language</label>
+				<select asp-for="LanguageId" class="form-control" asp-items="ViewBag.Language"></select>
+			</div>
+			<div class="form-group">
+				<label asp-for="BookFile" class="control-label"></label>
+				<input asp-for="BookFile" id="PdfUpload" class="form-control" type="file" accept="application/pdf" />
+			</div>
+			<div class="form-group">
+				<input type="submit" value="Create" class="btn btn-primary" />
+			</div>
+		</form>
+	</div>
+</div>
+
+<div>
+	<a asp-action="Index">Back to List</a>
+</div>
+@section Scripts {
+	@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/js/CreateBook.js"></script>
