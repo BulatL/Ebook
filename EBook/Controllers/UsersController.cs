@@ -10,22 +10,27 @@ using EBook.Models;
 using EBook.Services;
 using Microsoft.AspNetCore.Http;
 using EBook.ViewModels;
+using System.Linq.Expressions;
 
 namespace EBook.Controllers
 {
    public class UsersController : Controller
    {
 		private IUser _manager;
+		private ICategory _categoryManager;
 
-      public UsersController(IUser manager)
+
+		public UsersController(IUser manager, ICategory categoryManager)
       {
 			_manager = manager;
+			_categoryManager = categoryManager;
       }
 
       // GET: Users
       public IActionResult Index()
       {
-         return View(_manager.GetAllUsers());
+			List<User> users = _manager.GetAllUsers().ToList();
+         return View(users);
       }
 
       // GET: Users/Details/5
@@ -43,7 +48,8 @@ namespace EBook.Controllers
 		
       public IActionResult Register()
       {
-         return View();
+			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name");
+			return View();
       }
 
       // POST: Users/Create
@@ -51,20 +57,33 @@ namespace EBook.Controllers
       // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
       [HttpPost]
       [ValidateAntiForgeryToken]
-      public IActionResult Register(User user)
+      public IActionResult Register(UserViewModel model)
       {
          if (ModelState.IsValid)
          {
-				User exist = _manager.GetByUsername(user.Username);
+				User exist = _manager.GetByUsername(model.Username);
 				if(exist != null)
 				{
 					ModelState.AddModelError("Username", "Username already taken");
-					return View(user);
+					return View(model);
+				}
+				User user = new User()
+				{
+					Firstname = model.Firstname,
+					Lastname = model.Lastname,
+					Password = model.Password,
+					Role = model.Role,
+					SubscribedCategorieId = model.SubscribedCategorieId,
+					Username = model.Username
+				};
+				if(model.SubscribedCategorieAll == true)
+				{
+					user.SubscribedCategorieId = null;
 				}
             _manager.Create(user);
             return RedirectToAction(nameof(Index));
          }
-         return View(user);
+         return View(model);
       }
 
       // GET: Users/Edit/5
@@ -87,7 +106,25 @@ namespace EBook.Controllers
          {
                return NotFound();
          }
-         return View(user);
+
+			UserViewModel model = new UserViewModel()
+			{
+				Firstname = user.Firstname,
+				Lastname = user.Lastname,
+				Password = user.Password,
+				Role = user.Role,
+				Username = user.Username
+			};
+			if (user.SubscribedCategorieId == null)
+			{
+				model.SubscribedCategorieAll = true;
+			}
+			else
+			{
+				model.SubscribedCategorieId = int.Parse(user.SubscribedCategorieId.ToString());
+			}
+			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", model.SubscribedCategorieId);
+			return View(model);
       }
 
       // POST: Users/Edit/5
@@ -95,11 +132,11 @@ namespace EBook.Controllers
       // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
       [HttpPost]
       [ValidateAntiForgeryToken]
-      public IActionResult Edit(int id, User user)
+      public IActionResult Edit(int id, UserViewModel model)
 		{
 			User loggedInUser = GetLoggedInUser();
 
-			if (id != user.Id)
+			if (id != model.Id)
 				return NotFound();
          
 			if (loggedInUser == null)
@@ -112,20 +149,33 @@ namespace EBook.Controllers
          {
             try
             {
-					User exist = _manager.GetByUsername(user.Username);
+					User exist = _manager.GetByUsername(model.Username);
 					if (exist != null)
 					{
 						if(exist.Id == id)
 						{
 							ModelState.AddModelError("Username", "Username already taken");
-							return View(user);
+							return View(model);
 					}
 					}
-				_manager.Update(user);
+					User user = new User()
+					{
+						Firstname = model.Firstname,
+						Lastname = model.Lastname,
+						Password = model.Password,
+						Role = model.Role,
+						SubscribedCategorieId = model.SubscribedCategorieId,
+						Username = model.Username
+					};
+					if (model.SubscribedCategorieAll == true)
+					{
+						user.SubscribedCategorieId = null;
+					}
+					_manager.Update(user);
             }
             catch (DbUpdateConcurrencyException)
             {
-               if (!_manager.Exist(user.Id))
+               if (!_manager.Exist(model.Id))
                {
                   return NotFound();
                }
@@ -136,7 +186,7 @@ namespace EBook.Controllers
             }
             return RedirectToAction(nameof(Index));
          }
-         return View(user);
+         return View(model);
       }
 
       // GET: Users/Delete/5

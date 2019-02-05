@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,6 +19,9 @@ namespace EBook.Models
 		public string Password { get; set; }
 		[Required]
 		public Role Role { get; set; }
-		public List<Subscribed> SubscribedCategories { get; set; }
+		[ForeignKey("SubscribedCategorieId")]
+		[NotMapped]
+		public virtual Category SubscribedCategorie { get; set; }
+		public int? SubscribedCategorieId { get; set; }
 	}
 }

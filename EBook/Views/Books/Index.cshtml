@@ -3,11 +3,18 @@
 @{
 	ViewData["Title"] = "Index";
 }
+<link href="~/css/Search.css" rel="stylesheet" />
 
 <h1>Index</h1>
 
 <p>
-	<a asp-action="Create">Create New</a>
+	<a id="createNew" asp-action="Create">Create New</a>
+</p>
+<p>
+	<label>Category</label>
+	<div id="mainselection">
+		<select asp-items="ViewBag.Category" style="width:20em;"></select>
+	</div>
 </p>
 <table class="table">
 	<thead>
@@ -36,7 +43,21 @@
 			<th>
 				@Html.DisplayNameFor(model => model.Language)
 			</th>
-			<th></th>
+			<th class="edit">
+				Edit
+			</th>
+			<th>
+				Details
+			</th>
+			<th class="download">
+				Delete
+			</th>
+			<th class="delete">
+				Download
+			</th>
+			<th id="RegisterHeader">
+				Register
+			</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -67,17 +88,20 @@
 				<td>
 					@Html.DisplayFor(modelItem => item.Language.Name)
 				</td>
-				<td>
-					<a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+				<td class="edit">
+					<a class="edit" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
 				</td>
 				<td>
 					<a asp-action="Details" asp-route-id="@item.Id">Details</a>
 				</td>
-				<td>
-					<a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+				<td class="delete">
+					<a class="delete" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+				</td>
+				<td class="download">
+					<a class="download" asp-action="Download" asp-route-filename="@item.FileName">Download</a>
 				</td>
 				<td>
-					<a asp-action="Download" asp-route-filename="@item.FileName">Download</a>
+					<a class="register" asp-action="Register" asp-controller="User">Register</a>
 				</td>
 			</tr>
 		}
@@ -86,3 +110,8 @@
 
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/js/Book.js"></script>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.css" />
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>

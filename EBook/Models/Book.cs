@@ -29,5 +29,6 @@ namespace EBook.Models
 		[NotMapped]
 		public Language Language { get; set; }
 		public int LanguageId { get; set; }
+		public string Body { get; set; }
 	}
 }

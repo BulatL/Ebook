@@ -44,11 +44,18 @@ namespace EBook.Migrations
                     Lastname = table.Column<string>(maxLength: 30, nullable: false),
                     Username = table.Column<string>(maxLength: 10, nullable: false),
                     Password = table.Column<string>(maxLength: 10, nullable: false),
-                    Role = table.Column<int>(nullable: false)
+                    Role = table.Column<int>(nullable: false),
+                    SubscribedCategorieId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_User", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_User_Category_SubscribedCategorieId",
+                        column: x => x.SubscribedCategorieId,
+                        principalTable: "Category",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -64,7 +71,8 @@ namespace EBook.Migrations
                     FileName = table.Column<string>(maxLength: 200, nullable: false),
                     MIME = table.Column<string>(maxLength: 100, nullable: false),
                     CategoryId = table.Column<int>(nullable: false),
-                    LanguageId = table.Column<int>(nullable: false)
+                    LanguageId = table.Column<int>(nullable: false),
+                    Body = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -83,37 +91,13 @@ namespace EBook.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "Subscribed",
-                columns: table => new
-                {
-                    UserId = table.Column<int>(nullable: false),
-                    CategoryId = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Subscribed", x => new { x.UserId, x.CategoryId });
-                    table.ForeignKey(
-                        name: "FK_Subscribed_Category_CategoryId",
-                        column: x => x.CategoryId,
-                        principalTable: "Category",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Subscribed_User_UserId",
-                        column: x => x.UserId,
-                        principalTable: "User",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
             migrationBuilder.InsertData(
                 table: "Category",
                 columns: new[] { "Id", "Name" },
                 values: new object[,]
                 {
                     { 1, "Action and Adventure" },
-                    { 17, "Short story	" },
+                    { 18, "Thriller	" },
                     { 16, "True crime" },
                     { 15, "Science fiction" },
                     { 14, "Romance" },
@@ -121,7 +105,7 @@ namespace EBook.Migrations
                     { 12, "Political thriller" },
                     { 11, "Review" },
                     { 10, "Mystery" },
-                    { 18, "Thriller	" },
+                    { 17, "Short story	" },
                     { 8, "History" },
                     { 7, "Fantasy" },
                     { 6, "Drama" },
@@ -137,31 +121,36 @@ namespace EBook.Migrations
                 columns: new[] { "Id", "Name" },
                 values: new object[,]
                 {
-                    { 14, "Czech" },
                     { 13, "Greek" },
                     { 12, "Hungarian" },
                     { 11, "Serbian" },
                     { 10, "Ukrainian" },
                     { 9, "Polish" },
                     { 8, "Italian" },
-                    { 5, "German" },
-                    { 6, "French" },
                     { 4, "Japanese" },
+                    { 6, "French" },
+                    { 5, "German" },
                     { 3, "Russian" },
                     { 2, "English" },
                     { 1, "Spanish" },
+                    { 14, "Czech" },
                     { 7, "Turkish" }
                 });
 
             migrationBuilder.InsertData(
                 table: "User",
-                columns: new[] { "Id", "Firstname", "Lastname", "Password", "Role", "Username" },
-                values: new object[,]
-                {
-                    { 2, "Nikola", "Nikolic", "123", 0, "nikola" },
-                    { 1, "Marko", "Markovic", "123", 0, "marko" },
-                    { 3, "Ivan", "Ivanovic", "123", 1, "ivan" }
-                });
+                columns: new[] { "Id", "Firstname", "Lastname", "Password", "Role", "SubscribedCategorieId", "Username" },
+                values: new object[] { 1, "Marko", "Markovic", "123", 0, null, "marko" });
+
+            migrationBuilder.InsertData(
+                table: "User",
+                columns: new[] { "Id", "Firstname", "Lastname", "Password", "Role", "SubscribedCategorieId", "Username" },
+                values: new object[] { 2, "Nikola", "Nikolic", "123", 0, 1, "nikola" });
+
+            migrationBuilder.InsertData(
+                table: "User",
+                columns: new[] { "Id", "Firstname", "Lastname", "Password", "Role", "SubscribedCategorieId", "Username" },
+                values: new object[] { 3, "Ivan", "Ivanovic", "123", 1, 2, "ivan" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Book_CategoryId",
@@ -174,9 +163,9 @@ namespace EBook.Migrations
                 column: "LanguageId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Subscribed_CategoryId",
-                table: "Subscribed",
-                column: "CategoryId");
+                name: "IX_User_SubscribedCategorieId",
+                table: "User",
+                column: "SubscribedCategorieId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -185,16 +174,13 @@ namespace EBook.Migrations
                 name: "Book");
 
             migrationBuilder.DropTable(
-                name: "Subscribed");
+                name: "User");
 
             migrationBuilder.DropTable(
                 name: "Language");
 
             migrationBuilder.DropTable(
                 name: "Category");
-
-            migrationBuilder.DropTable(
-                name: "User");
         }
     }
 }

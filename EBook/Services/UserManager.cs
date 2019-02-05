@@ -39,17 +39,17 @@ namespace EBook.Services
 
 		public IEnumerable<User> GetAllUsers()
 		{
-			return _context.User.OrderBy(c => c.Username);
+			return _context.User.OrderBy(c => c.Username).Include(c => c.SubscribedCategorie);
 		}
 
 		public User GetById(int id)
 		{
-			return _context.User.SingleOrDefault(u => u.Id == id);
+			return _context.User.Include(c => c.SubscribedCategorie).SingleOrDefault(u => u.Id == id);
 		}
 
 		public User GetByUsername(string username)
 		{
-			return _context.User.SingleOrDefault(u => u.Username == username);
+			return _context.User.Include(c => c.SubscribedCategorie).SingleOrDefault(u => u.Username == username);
 		}
 
 		public bool Exist(int id)

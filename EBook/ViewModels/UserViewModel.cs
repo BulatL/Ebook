@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EBook.Models;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -17,6 +18,11 @@ namespace EBook.ViewModels
 		[Required, MaxLength(10)]
 		public string Password { get; set; }
 		[Required]
-		public RoleViewModel Role { get; set; }
+		public Role Role { get; set; }
+		[Required, Display(Name = "Subcribe to category")]
+		public int SubscribedCategorieId { get; set; }
+
+		[Required, Display(Name = "Subcribe to all categories")]
+		public bool SubscribedCategorieAll { get; set; }
 	}
 }

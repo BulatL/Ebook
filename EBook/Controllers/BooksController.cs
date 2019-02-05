@@ -19,41 +19,85 @@ namespace EBook.Controllers
 {
    public class BooksController : Controller
    {
-      private readonly EbookDbContext _context;
 		private IHostingEnvironment _hostingEnvironment;
 		private IBook _bookManager;
 		private ICategory _categoryManager;
 		private ILanguage _languageManager;
+		private IUser _userManager;
 
-      public BooksController(EbookDbContext context,IHostingEnvironment hostingEnvironment , IBook bookManager, 
-			ICategory categoryManager, ILanguage languageManager)
+      public BooksController(IHostingEnvironment hostingEnvironment , IBook bookManager, 
+			ICategory categoryManager, ILanguage languageManager, IUser userManager)
       {
-         _context = context;
 			_hostingEnvironment = hostingEnvironment;
 			_bookManager = bookManager;
 			_categoryManager = categoryManager;
 			_languageManager = languageManager;
+			_userManager = userManager;
       }
 
       // GET: Books
-      public async Task<IActionResult> Index()
+		[Route("[controller]/{id?}")]
+      public IActionResult Index(int? id)
       {
-         var ebookDbContext = _context.Book.Include(b => b.Category).Include(b => b.Language);
-         return View(await ebookDbContext.ToListAsync());
+			var loggedInUserId = HttpContext.Session.GetString("LoggedInUserId");
+			List<Book> books = new List<Book>();
+			int categorySelectId = 1;
+			if(id != null)
+			{
+				categorySelectId = int.Parse(id.ToString());
+			}
+			if (loggedInUserId == null)
+			{
+				if (id != null)
+					books.AddRange(_bookManager.GetBooksByCategory(categorySelectId));
+				else
+					books.AddRange(_bookManager.GetAllBooks());
+				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", categorySelectId);
+				return View(books);
+			}
+			User user = _userManager.GetById(int.Parse(loggedInUserId));
+			
+			if (user == null)
+			{
+				if (id != null)
+					books.AddRange(_bookManager.GetBooksByCategory(categorySelectId));
+				else
+					books.AddRange(_bookManager.GetAllBooks());
+				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", categorySelectId);
+				return View(books);
+			}
+			if(user.SubscribedCategorieId != null)
+			{
+				if (id != null)
+					books.AddRange(_bookManager.GetBooksByCategory(categorySelectId));
+				else
+					books.AddRange(_bookManager.GetBooksByCategory(int.Parse(user.SubscribedCategorieId.ToString())));
+				List<Category> categories = new List<Category>();
+				Category category = _categoryManager.GetById(int.Parse(user.SubscribedCategorieId.ToString()));
+				categories.Add(category);
+				ViewData["Category"] = new SelectList(categories, "Id", "Name");
+				return View(books);
+			}
+			else
+			{
+				if (id != null)
+					books.AddRange(_bookManager.GetBooksByCategory(categorySelectId));
+				else
+					books.AddRange(_bookManager.GetAllBooks());
+				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", categorySelectId);
+				return View(books);
+			}
       }
 
       // GET: Books/Details/5
-      public async Task<IActionResult> Details(int? id)
+      public IActionResult Details(int? id)
       {
          if (id == null)
          {
                return NotFound();
          }
 
-         var book = await _context.Book
-               .Include(b => b.Category)
-               .Include(b => b.Language)
-               .FirstOrDefaultAsync(m => m.Id == id);
+			var book = _bookManager.GetById(int.Parse(id.ToString()));
          if (book == null)
          {
                return NotFound();
@@ -91,33 +135,32 @@ namespace EBook.Controllers
 					Title = bookView.Title
 					
 				};
-            _context.Add(book);
-            await _context.SaveChangesAsync();
-				ElasticSearchController elasticSearchController = new ElasticSearchController(_hostingEnvironment, _bookManager);
-				await elasticSearchController.Index(book);
+				_bookManager.Create(book);
+				ElasticsearchController elasticSearchController = new ElasticsearchController(_hostingEnvironment, _bookManager);
+				await elasticSearchController.IndexBook(book);
             return RedirectToAction(nameof(Index));
          }
-         ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name", bookView.CategoryId);
-         ViewData["LanguageId"] = new SelectList(_context.Language, "Id", "Name", bookView.LanguageId);
+         ViewData["CategoryId"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", bookView.CategoryId);
+         ViewData["LanguageId"] = new SelectList(_languageManager.GetAllLanguages(), "Id", "Name", bookView.LanguageId);
          return View(bookView);
       }
 
       // GET: Books/Edit/5
-      public async Task<IActionResult> Edit(int? id)
+      public IActionResult Edit(int? id)
       {
          if (id == null)
          {
                return NotFound();
          }
 
-         var book = await _context.Book.FindAsync(id);
+			var book = _bookManager.GetAllBooks();
          if (book == null)
          {
                return NotFound();
-         }
-         ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name", book.CategoryId);
-         ViewData["LanguageId"] = new SelectList(_context.Language, "Id", "Name", book.LanguageId);
-         return View(book);
+			}
+			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name");
+			ViewData["Language"] = new SelectList(_languageManager.GetAllLanguages(), "Id", "Name");
+			return View(book);
       }
 
       // POST: Books/Edit/5
@@ -125,7 +168,7 @@ namespace EBook.Controllers
       // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
       [HttpPost]
       [ValidateAntiForgeryToken]
-      public async Task<IActionResult> Edit(int id, [Bind("Title,Author,Keywords,PublicationYear,FileName,MIME,CategoryId,LanguageId,Id")] Book book)
+      public IActionResult Edit(int id, Book book)
       {
          if (id != book.Id)
          {
@@ -134,41 +177,27 @@ namespace EBook.Controllers
 
          if (ModelState.IsValid)
          {
-               try
-               {
-                  _context.Update(book);
-                  await _context.SaveChangesAsync();
-               }
-               catch (DbUpdateConcurrencyException)
-               {
-                  if (!BookExists(book.Id))
-                  {
-                     return NotFound();
-                  }
-                  else
-                  {
-                     throw;
-                  }
-               }
-               return RedirectToAction(nameof(Index));
-         }
-         ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name", book.CategoryId);
-         ViewData["LanguageId"] = new SelectList(_context.Language, "Id", "Name", book.LanguageId);
-         return View(book);
+            _bookManager.Update(book);
+
+				ElasticsearchController elasticSearchController = new ElasticsearchController(_hostingEnvironment, _bookManager);
+				elasticSearchController.UpdateIndex(id);
+
+				return RedirectToAction(nameof(Index));
+			}
+			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name");
+			ViewData["Language"] = new SelectList(_languageManager.GetAllLanguages(), "Id", "Name");
+			return View(book);
       }
 
       // GET: Books/Delete/5
-      public async Task<IActionResult> Delete(int? id)
+      public IActionResult Delete(int? id)
       {
          if (id == null)
          {
                return NotFound();
          }
 
-         var book = await _context.Book
-               .Include(b => b.Category)
-               .Include(b => b.Language)
-               .FirstOrDefaultAsync(m => m.Id == id);
+			var book = _bookManager.GetAllBooks();
          if (book == null)
          {
                return NotFound();
@@ -180,12 +209,14 @@ namespace EBook.Controllers
       // POST: Books/Delete/5
       [HttpPost, ActionName("Delete")]
       [ValidateAntiForgeryToken]
-      public async Task<IActionResult> DeleteConfirmed(int id)
+      public IActionResult DeleteConfirmed(int id)
       {
-         var book = await _context.Book.FindAsync(id);
-         _context.Book.Remove(book);
-         await _context.SaveChangesAsync();
-         return RedirectToAction(nameof(Index));
+			_bookManager.Delete(id);
+
+			ElasticsearchController elasticSearchController = new ElasticsearchController(_hostingEnvironment, _bookManager);
+			elasticSearchController.DeleteDocument(id);
+
+			return RedirectToAction(nameof(Index));
       }
 
 		[HttpPost]
@@ -193,20 +224,9 @@ namespace EBook.Controllers
 		{
 			string fileName = UploadPdf(pdf.FileName, pdf);
 			string filePath = System.IO.Path.Combine(_hostingEnvironment.WebRootPath, "uploads/" + fileName);
-			/*PdfDocument document = PdfReader.Open(filePath);
-			string info = document.Info.ToString();
-			string title = document.Info.Title.ToString();
-			string authror = document.Info.Author.ToString();
-			string keywords = document.Info.Keywords.ToString();
-			string creationDate = document.Info.CreationDate.ToString("yyyy-MM-dd");*/
 
 			PdfReader reader = new PdfReader(filePath);
-			/*var bodyFromPdf = string.Empty;
-			for (int c = 1; c <= reader.NumberOfPages; c++)
-			{
-				ITextExtractionStrategy strategy = new SimpleTextExtractionStrategy();
-				bodyFromPdf += PdfTextExtractor.GetTextFromPage(reader, c, strategy);
-			}*/
+
 			string info = reader.Info.ToString();
 			string title = reader.Info["Title"];
 			string authror = reader.Info["Author"];
@@ -220,17 +240,8 @@ namespace EBook.Controllers
 			return Json(title + "^" + authror + "^" + keywords + "^" + creationDate + "^" + fileName + "^" + pdf.ContentType);
 		}
 
-      private bool BookExists(int id)
-      {
-         return _context.Book.Any(e => e.Id == id);
-      }
-
 		public async Task<IActionResult> Download(string filename)
 		{
-			/*var filePath = Path.Combine(_hostingEnvironment.WebRootPath, "uploads/" + filename);
-			FileStream fs = new FileStream(filePath, FileMode.Create);
-			return File(fs, "blob");*/
-
 			if (filename == null)
 				return Content("filename not present");
 

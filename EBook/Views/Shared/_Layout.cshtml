@@ -27,7 +27,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-						 <ul class="navbar-nav flex-grow-1">
+						 <ul class="navbar-nav flex-grow-1" id="navUl">
 						 	<li class="nav-item">
 						 		<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
 						 	</li>
@@ -44,13 +44,16 @@
 						 		<a class="nav-link text-dark" asp-area="" asp-controller="Languages" asp-action="Index">Languages</a>
 						 	</li>
 						 	<li class="nav-item">
-						 		<a class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Login">Login</a>
+						 		<a class="nav-link text-dark" asp-area="" asp-controller="Elasticsearch" asp-action="Index">Search</a>
 						 	</li>
 						 	<li class="nav-item">
-								<a class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Logout">Logout</a>
+						 		<a id="login" class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Login">Login</a>
 						 	</li>
 						 	<li class="nav-item">
-						 		<a class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Register">Register</a>
+						 		<a id="logout" class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Logout">Logout</a>
+						 	</li>
+						 	<li class="nav-item">
+						 		<a id="register" class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Register">Register</a>
 						 	</li>
 						 </ul>
                 </div>
@@ -89,6 +92,51 @@
         </script>
     </environment>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+	<script>
+		$(function () {
+			$.ajax({
+				url: 'https://localhost:44325/Users/GetLoggedInUser',
+				type: 'GET',
+				dataType: 'json',
+				success: function (response) {
+					if (typeof response === 'undefined') {
+						$(".edit").hide();
+						$(".delete").hide();
+						$(".download").hide();
+						$("#logout").hide();
+						$("#createNew").hide();
+						$("#editUser").hide();
+					}
+					else {
+						let pathname = window.location.pathname.toLowerCase();
+						let pathId = "/users/details/" + response.id;
+						let navUl = $("#navUl");
+						navUl.append
+							(`<li class="nav-item">
+						 		<a id="myProfile" class="nav-link text-dark" asp-area="" href="/users/details/${response.id}">My profile</a>
+						 	</li>
+							`);
+						$("#RegisterHeader").hide()
+						$(".register").hide()
+						if (response.role != 0) {
+							$(".edit").hide();
+							$(".delete").hide();
+							$(".download").hide();
+							if (pathname != pathId) {
+								$("#editUser").hide();
+							}
+						}
+						$("#login").hide();
+						$("#register").hide();
+					}
+				},
+				error: function (response, jqXHR) {
+					$("#logout").hide()
+				}
+			});
+		});
+	</script>
 
     @RenderSection("Scripts", required: false)
 </body>

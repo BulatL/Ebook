@@ -29,6 +29,8 @@ namespace EBook.Migrations
                         .IsRequired()
                         .HasMaxLength(120);
 
+                    b.Property<string>("Body");
+
                     b.Property<int>("CategoryId");
 
                     b.Property<string>("FileName")
@@ -254,19 +256,6 @@ namespace EBook.Migrations
                         });
                 });
 
-            modelBuilder.Entity("EBook.Models.Subscribed", b =>
-                {
-                    b.Property<int>("UserId");
-
-                    b.Property<int>("CategoryId");
-
-                    b.HasKey("UserId", "CategoryId");
-
-                    b.HasIndex("CategoryId");
-
-                    b.ToTable("Subscribed");
-                });
-
             modelBuilder.Entity("EBook.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -287,11 +276,15 @@ namespace EBook.Migrations
 
                     b.Property<int>("Role");
 
+                    b.Property<int?>("SubscribedCategorieId");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(10);
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SubscribedCategorieId");
 
                     b.ToTable("User");
 
@@ -312,6 +305,7 @@ namespace EBook.Migrations
                             Lastname = "Nikolic",
                             Password = "123",
                             Role = 0,
+                            SubscribedCategorieId = 1,
                             Username = "nikola"
                         },
                         new
@@ -321,6 +315,7 @@ namespace EBook.Migrations
                             Lastname = "Ivanovic",
                             Password = "123",
                             Role = 1,
+                            SubscribedCategorieId = 2,
                             Username = "ivan"
                         });
                 });
@@ -338,16 +333,11 @@ namespace EBook.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
-            modelBuilder.Entity("EBook.Models.Subscribed", b =>
+            modelBuilder.Entity("EBook.Models.User", b =>
                 {
-                    b.HasOne("EBook.Models.Category", "Category")
+                    b.HasOne("EBook.Models.Category", "SubscribedCategorie")
                         .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("EBook.Models.User", "User")
-                        .WithMany("SubscribedCategories")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("SubscribedCategorieId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 #pragma warning restore 612, 618

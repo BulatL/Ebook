@@ -50,3 +50,4 @@ D:\Projects\E-book\EBook\EBook\obj\Debug\netcoreapp2.2\Razor\Views\Languages\Ind
 D:\Projects\E-book\EBook\EBook\obj\Debug\netcoreapp2.2\Razor\Views\Users\Login.g.cshtml.cs
 D:\Projects\E-book\EBook\EBook\obj\Debug\netcoreapp2.2\Razor\Views\Users\Register.g.cshtml.cs
 D:\Projects\E-book\EBook\EBook\obj\Debug\netcoreapp2.2\Razor\Views\Users\ChangePassword.g.cshtml.cs
+D:\Projects\E-book\EBook\EBook\obj\Debug\netcoreapp2.2\Razor\Views\Elasticsearch\Index.g.cshtml.cs

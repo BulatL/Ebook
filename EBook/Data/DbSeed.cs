@@ -33,9 +33,9 @@ namespace EBook.Data
 				);
 			
 			modelBuilder.Entity<User>().HasData(
-				new User { Id = 1, Firstname = "Marko", Lastname = "Markovic", Username = "marko", Password = "123", Role = Role.Admin },
-				new User { Id = 2, Firstname = "Nikola", Lastname = "Nikolic", Username = "nikola", Password = "123", Role = Role.Admin },
-				new User { Id = 3, Firstname = "Ivan", Lastname = "Ivanovic", Username = "ivan", Password = "123", Role = Role.Subscriber }
+				new User { Id = 1, Firstname = "Marko", Lastname = "Markovic", Username = "marko", Password = "123", Role = Role.Admin},
+				new User { Id = 2, Firstname = "Nikola", Lastname = "Nikolic", Username = "nikola", Password = "123", Role = Role.Admin, SubscribedCategorieId = 1 },
+				new User { Id = 3, Firstname = "Ivan", Lastname = "Ivanovic", Username = "ivan", Password = "123", Role = Role.Subscriber, SubscribedCategorieId = 2 }
 				);
 
 			modelBuilder.Entity<Language>().HasData(
