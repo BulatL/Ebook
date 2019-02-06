@@ -31,7 +31,7 @@ function Search() {
 	let searchInput = $("#searchInput").val();
 	let querySelect = $('#querySelect').find(":selected").text();
 
-	let andOr = $('input[name=AndOr]:checked').val()
+	let andOrNot = $('input[name=andOrNot]:checked').val()
 
 	let slop = $("#slop").val();
 
@@ -47,83 +47,77 @@ function Search() {
 
 	if ($("#querySelect").val() == "Boolean") {
 		$.ajax({
-			url: 'https://localhost:44325/Elasticsearch/phrase/' + searchInput + "/" + slop,
+			url: 'https://localhost:44325/Elasticsearch/bool/' + searchInput + "/" + andOrNot,
 			type: 'GET',
 			dataType: 'json',
 			success: function (response) {
-				console.table(response);
 				fillTable(response);
 				hideColumns();
 			},
 			error: function (response, jqXHR) {
-				console.table(response);
 			}
 		});
 	}
 	else if ($("#querySelect").val() == "Phraze query") {
+
+		if (slop == "")
+			slop = 1;
+
 		$.ajax({
 			url: 'https://localhost:44325/Elasticsearch/phrase/' + searchInput + "/" + slop,
 			type: 'GET',
 			dataType: 'json',
 			success: function (response) {
-				console.table(response);
 				fillTable(response);
 				hideColumns();
 			},
 			error: function (response, jqXHR) {
-				console.table(response);
 			}
 		});
 	}
 	else if ($("#querySelect").val() == "Fuzzy query") {
+
+		if (fuzziness == "")
+			fuzziness = 2;
+		if (prefixLenght == "")
+			prefixLenght = 0;
+		if (maxExpansions == "")
+			maxExpansions = 100;
+
+		console.log(searchInput);
+
 		$.ajax({
 			url: 'https://localhost:44325/Elasticsearch/fuzzy/' + searchInput + "/" + fuzziness + "/" + prefixLenght
 				+ "/" + transposition + "/" + maxExpansions,
 			type: 'GET',
 			dataType: 'json',
 			success: function (response) {
-				console.table(response);
+				console.log(response);
 				fillTable(response);
 				hideColumns();
 			},
 			error: function (response, jqXHR) {
-				console.table(response);
 			}
 		});
 	}
-
-	/*console.log("--------------------- \n");
-	console.log(searchInput);
-	console.log(querySelect);
-	console.log("--------------------- \n Boolean \n");
-	console.log(andOr);
-	console.log("--------------------- \n phraze \n");
-	console.log(slop);
-	console.log("--------------------- \n fuzzy \n");
-	console.log(fuzziness);
-	console.log(prefixLenght);
-	console.log(transpositionsboxes);
-	console.log(maxExpansions);*/
 }
 
 function fillTable(data) {
 	let tableBody = $("#tableBody");
 	let hightlights = "";
-	console.log(data);
 
 	tableBody.empty();
 	for (var i = 0; i < data.length; i++) {
-		console.log(data[i]);
 		for (var j = 0; j < data[i].hightlights.length; j++) {
 			hightlights += data[i].hightlights[j] + "<br />";
 		}
-		console.log(hightlights);
+
 		tableBody.append(`
 		<tr>
 			<td>${data[i].bookTitle}</td>
 			<td>${hightlights}</td>
 			<td class="download"><a class="download" href="/Books/Download?filename=${data[i].bookFilename}" style="display: none;">Download</a></td>
-			<td class="register"><a class="register" href="">Register</a></td>
+			<td class="register"><a class="register" href="Users/Register">Register</a></td>
 		</tr>
 		`);
 	}
@@ -146,12 +140,6 @@ function hideColumns() {
 			else {
 				let pathname = window.location.pathname.toLowerCase();
 				let pathId = "/users/details/" + response.id;
-				let navUl = $("#navUl");
-				navUl.append
-					(`<li class="nav-item">
-						 		<a id="myProfile" class="nav-link text-dark" asp-area="" href="/users/details/${response.id}">My profile</a>
-						 	</li>
-							`);
 				$("#RegisterHeader").hide()
 				$(".register").hide()
 				if (response.role != 0) {

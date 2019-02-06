@@ -267,8 +267,8 @@ namespace EBook.Controllers
 				List<string> highlightsList = new List<string>();
 				foreach (var h in item.Highlights.Values)
 				{
-					string highl = "";
-					highl = h.Field + " : ";
+					string highl = "<strong>";
+					highl = h.Field + "</strong> : ";
 					var highlight = h.Highlights.ToList();
 					foreach (var hl in highlight)
 					{
@@ -472,8 +472,8 @@ namespace EBook.Controllers
 				List<string> highlightsList = new List<string>();
 				foreach (var h in item.Highlights.Values)
 				{
-					string highl = "";
-					highl = h.Field + " : ";
+					string highl = "<strong>";
+					highl = h.Field + "</strong> : ";
 					var highlight = h.Highlights.ToList();
 					foreach (var hl in highlight)
 					{
@@ -488,7 +488,7 @@ namespace EBook.Controllers
 		}
 
 		//https://localhost:44325/Elasticsearch/phrase/отворене коридора/2
-		[Route("[controller]/bool/{search}")]
+		[Route("[controller]/bool/{search}/{andOrNot}")]
 		public JsonResult ElasticsearchBool(string search, string andOrNot)
 		{
 			if (String.IsNullOrEmpty(search))
@@ -515,6 +515,22 @@ namespace EBook.Controllers
 													.Must(m => m
 														.Match(ma => ma
 															.Field(f => f.Title)
+															.Query(search)
+														) || m
+														.Match(ma => ma
+															.Field(f => f.Author)
+															.Query(search)
+														) || m
+														.Match(ma => ma
+															.Field(f => f.Keywords)
+															.Query(search)
+														) || m
+														.Match(ma => ma
+															.Field(f => f.Language.Name)
+															.Query(search)
+														) || m
+														.Match(ma => ma
+															.Field(f => f.Body)
 															.Query(search)
 														)
 													)
@@ -599,8 +615,148 @@ namespace EBook.Controllers
 									  );
 					break;
 				case "or":
+					responsedata = client.Search<Book>(s => s
+											.Index("proba123")
+											.AllTypes()
+											.From(0)
+											.Size(50)
+											.Query(q => q
+												.Bool(b => b
+													.Should(m => m
+														.Match(ma => ma
+															.Field(f => f.Title)
+															.Query(search)
+														) || m
+														.Match(ma => ma
+															.Field(f => f.Author)
+															.Query(search)
+														) || m
+														.Match(ma => ma
+															.Field(f => f.Keywords)
+															.Query(search)
+														) || m
+														.Match(ma => ma
+															.Field(f => f.Language.Name)
+															.Query(search)
+														) || m
+														.Match(ma => ma
+															.Field(f => f.Body)
+															.Query(search)
+														)
+													)
+												)
+											)
+											.Highlight(h => h
+												 .PreTags("<strong>")
+												 .PostTags("</strong>")
+												 .Encoder(HighlighterEncoder.Html)
+												 .Fields(fs => fs
+												  .Field(f => f.Title)
+												  .Type(HighlighterType.Plain)
+												  .PreTags("<strong>")
+												  .PostTags("</strong>")
+												  .ForceSource()
+												  .Fragmenter(HighlighterFragmenter.Span)
+												  .HighlightQuery(q => q
+													  .Match(m => m
+														 .Field(p => p.Title)
+														 .Query(search)
+													  )
+												  ),
+
+													fs => fs
+													.Field(f => f.Author)
+													.RequireFieldMatch(true)
+													.Type(HighlighterType.Plain)
+													.PreTags("<strong>")
+													.PostTags("</strong>")
+													.ForceSource()
+													.Fragmenter(HighlighterFragmenter.Span)
+													.HighlightQuery(q => q
+														.Match(m => m
+														  .Field(p => p.Author)
+														  .Query(search)
+														)
+													),
+
+													fs => fs
+													.Field(f => f.Keywords)
+													.Type(HighlighterType.Plain)
+													.PreTags("<strong>")
+													.PostTags("</strong>")
+													.ForceSource()
+													.Fragmenter(HighlighterFragmenter.Span)
+													.HighlightQuery(q => q
+														.Match(m => m
+														  .Field(p => p.Keywords)
+														  .Query(search)
+														)
+													),
+
+													fs => fs
+													.Field(f => f.Body)
+													.Type(HighlighterType.Plain)
+													.PreTags("<strong>")
+													.PostTags("</strong>")
+													.ForceSource()
+													.Fragmenter(HighlighterFragmenter.Span)
+													.HighlightQuery(q => q
+														.Match(m => m
+														  .Field(p => p.Body)
+														  .Query(search)
+														)
+													),
+
+													fs => fs
+													.Field(f => f.Language.Name)
+													.Type(HighlighterType.Plain)
+													.PreTags("<strong>")
+													.PostTags("</strong>")
+													.ForceSource()
+													.Fragmenter(HighlighterFragmenter.Span)
+													.HighlightQuery(q => q
+														.Match(m => m
+														  .Field(p => p.Language.Name)
+														  .Query(search)
+														)
+													)
+												 )
+											)
+									  );
 					break;
 				case "not":
+					responsedata = client.Search<Book>(s => s
+											.Index("proba123")
+											.AllTypes()
+											.From(0)
+											.Size(50)
+											.Query(q => q
+												.Bool(b => b
+													.MustNot(m => m
+														.Match(ma => ma
+															.Field(f => f.Title)
+															.Query(search)
+														) || m
+														.Match(ma => ma
+															.Field(f => f.Author)
+															.Query(search)
+														) || m
+														.Match(ma => ma
+															.Field(f => f.Keywords)
+															.Query(search)
+														) || m
+														.Match(ma => ma
+															.Field(f => f.Language.Name)
+															.Query(search)
+														) || m
+														.Match(ma => ma
+															.Field(f => f.Body)
+															.Query(search)
+														)
+													)
+												)
+											)
+									  );
 					break;
 			}
 			
@@ -611,8 +767,8 @@ namespace EBook.Controllers
 				List<string> highlightsList = new List<string>();
 				foreach (var h in item.Highlights.Values)
 				{
-					string highl = "";
-					highl = h.Field + " : "; 
+					string highl = "<strong>";
+					highl = h.Field + "</strong> : "; 
 					var highlight = h.Highlights.ToList();
 					foreach (var hl in highlight)
 					{
