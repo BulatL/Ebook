@@ -114,9 +114,9 @@ function fillTable(data) {
 
 		tableBody.append(`
 		<tr>
-			<td>${data[i].bookTitle}</td>
+			<td><a class="ahref" href="/Books/Details/${data[i].bookId}">${data[i].bookTitle}</a></td>
 			<td>${hightlights}</td>
-			<td class="download"><a class="download" href="/Books/Download?filename=${data[i].bookFilename}" style="display: none;">Download</a></td>
+			<td class="download"><a class="download" href="/Books/Download/${data[i].bookId}" style="display: none;">Download</a></td>
 			<td class="register"><a class="register" href="Users/Register">Register</a></td>
 		</tr>
 		`);

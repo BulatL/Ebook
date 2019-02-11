@@ -48,7 +48,20 @@ namespace EBook.Services
 
 		public Language Update(Language language)
 		{
-			_context.Attach(language).State = EntityState.Modified;
+			var local = _context.Set<Language>()
+			 .Local
+			 .FirstOrDefault(entry => entry.Id.Equals(language.Id));
+
+			// check if local is not null 
+			if (local != null) // I'm using a extension method
+			{
+				// detach
+				_context.Entry(local).State = EntityState.Detached;
+			}
+			// set Modified flag in your entry
+			_context.Entry(language).State = EntityState.Modified;
+
+			// save 
 			_context.SaveChanges();
 			return language;
 		}

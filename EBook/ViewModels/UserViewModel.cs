@@ -19,10 +19,10 @@ namespace EBook.ViewModels
 		public string Password { get; set; }
 		[Required]
 		public Role Role { get; set; }
-		[Required, Display(Name = "Subcribe to category")]
+		[Display(Name = "Subcribe to category")]
 		public int SubscribedCategorieId { get; set; }
 
-		[Required, Display(Name = "Subcribe to all categories")]
+		[Display(Name = "Subcribe to all categories")]
 		public bool SubscribedCategorieAll { get; set; }
 	}
 }

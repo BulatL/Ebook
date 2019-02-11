@@ -25,12 +25,15 @@
 				@Html.DisplayNameFor(model => model.Role)
 			</th>
 			<th>
+				@Html.DisplayNameFor(model => model.SubscribedCategorie)
+			</th>
+			<th class="edit">
 				Edit
 			</th>
 			<th>
 				Details
 			</th>
-			<th>
+			<th class="delete">
 				Delete
 			</th>
 			<th></th>
@@ -53,12 +56,22 @@
 				@Html.DisplayFor(modelItem => item.Role)
 			</td>
 			<td>
+				@if (item.SubscribedCategorie == null)
+				{
+					<p>All categories</p>
+				}
+				@if (item.SubscribedCategorie != null)
+				{
+					@Html.DisplayFor(modelItem => item.SubscribedCategorie.Name)
+				}
+			</td>
+			<td class="edit">
 				<a class="edit" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
 			</td>
 			<td>
 				<a asp-action="Details" asp-route-id="@item.Id">Details</a>
 			</td>
-			<td>
+			<td class="delete">
 				<a class="delete" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
 			</td>
 			<td>

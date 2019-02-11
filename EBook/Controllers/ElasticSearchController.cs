@@ -37,7 +37,7 @@ namespace EBook.Controllers
 		public IActionResult IndexExist()
 		{
 			var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
-			.DefaultIndex("book");
+			.DefaultIndex("books");
 
 			var client = new ElasticClient(settings);
 
@@ -77,22 +77,53 @@ namespace EBook.Controllers
 			return Json(datasend);
 		}
 
-		public async Task<IActionResult> IndexBook(Book book)
+		public IActionResult IndexBook(Book book)
 		{
-			var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
-			.DefaultIndex("book");
+			var node = new Uri("http://localhost:9200");
+			var settings = new ConnectionSettings(node);
+			settings.DefaultIndex("books");
+			var lowlevelClient = new ElasticLowLevelClient();
 
-			var client = new ElasticClient(settings);
+			List<Object> listObj = new List<object>();
 
-			var asyncIndexResponse = await client.IndexDocumentAsync(book);
-			return Json(asyncIndexResponse);
+			var filePath = System.IO.Path.Combine(_hostingEnvironment.WebRootPath, "uploads/" + book.FileName);
+			PdfReader reader = new PdfReader(filePath);
+			var bodyFromPdf = string.Empty;
+			for (int c = 1; c <= reader.NumberOfPages; c++) { 
+				ITextExtractionStrategy strategy = new SimpleTextExtractionStrategy();
+				bodyFromPdf += PdfTextExtractor.GetTextFromPage(reader, c, strategy);
+			}
+			reader.Close();
+
+			var nesto = new { index = new { _index = "books", _type = "book", _id = book.Id } };
+			var nesto2 = new
+			{
+				id = book.Id.ToString(),
+				author = book.Author,
+				categoryId = book.CategoryId.ToString(),
+				category = book.Category,
+				fileName = book.FileName,
+				keywords = book.Keywords,
+				languageId = book.LanguageId.ToString(),
+				language = book.Language,
+				mIME = book.MIME,
+				publicationYear = book.PublicationYear.ToString("yyyy-MM-dd"),
+				title = book.Title,
+				body = bodyFromPdf
+			};
+			listObj.Add(nesto);
+			listObj.Add(nesto2);
+			var indexResponseList = lowlevelClient.Bulk<StringResponse>(PostData.MultiJson(listObj));
+			string responseStream = indexResponseList.Body;
+
+			return Json(responseStream);
 		}
 
 		public ActionResult IndexFromDB()
 		{
 			var node = new Uri("http://localhost:9200");
 			var settings = new ConnectionSettings(node);
-			settings.DefaultIndex("book");
+			settings.DefaultIndex("books");
 			var lowlevelClient = new ElasticLowLevelClient();
 
 			List<Book> books = _bookManager.GetAllBooks().ToList();
@@ -109,7 +140,7 @@ namespace EBook.Controllers
 				}
 				reader.Close();
 
-				var nesto = new { index = new { _index = "proba123", _type = "book", _id = books[i].Id } };
+				var nesto = new { index = new { _index = "books", _type = "book", _id = books[i].Id } };
 				var nesto2 = new
 				{
 					id = books[i].Id.ToString(),
@@ -142,12 +173,12 @@ namespace EBook.Controllers
 				search = "";
 			}
 			var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
-			.DefaultIndex("book");
+			.DefaultIndex("books");
 
 			var client = new ElasticClient(settings);
 
 			ISearchResponse<Book> responsedata = client.Search<Book>(s => s
-											.Index("proba123")
+											.Index("books")
 											.AllTypes()
 											.From(0)
 											.Size(50)
@@ -305,19 +336,13 @@ namespace EBook.Controllers
 			if (String.IsNullOrEmpty(search))
 				search = "";
 
-			if(maxExpansions == null)
-				maxExpansions = 50;
-
-			if (prefixLenght == null)
-				prefixLenght = 0;
-
 			var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
 			.DefaultIndex("book");
 
 			var client = new ElasticClient(settings);
 
 			var responsedata = client.Search<Book>(s => s
-											.Index("proba123")
+											.Index("books")
 											.AllTypes()
 											.From(0)
 											.Size(50)
@@ -496,7 +521,7 @@ namespace EBook.Controllers
 				search = "";
 			}
 			var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
-			.DefaultIndex("book");
+			.DefaultIndex("books");
 
 			var client = new ElasticClient(settings);
 
@@ -506,7 +531,7 @@ namespace EBook.Controllers
 			{
 				case "and":
 					responsedata = client.Search<Book>(s => s
-											.Index("proba123")
+											.Index("books")
 											.AllTypes()
 											.From(0)
 											.Size(50)
@@ -616,7 +641,7 @@ namespace EBook.Controllers
 					break;
 				case "or":
 					responsedata = client.Search<Book>(s => s
-											.Index("proba123")
+											.Index("books")
 											.AllTypes()
 											.From(0)
 											.Size(50)
@@ -726,7 +751,7 @@ namespace EBook.Controllers
 					break;
 				case "not":
 					responsedata = client.Search<Book>(s => s
-											.Index("proba123")
+											.Index("books")
 											.AllTypes()
 											.From(0)
 											.Size(50)
@@ -787,12 +812,12 @@ namespace EBook.Controllers
 		public JsonResult ElasticsearchMatchAll()
 		{
 			var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
-			.DefaultIndex("book");
+			.DefaultIndex("books");
 
 			var client = new ElasticClient(settings);
 
 			var responsedata = client.Search<Book>(s => s
-											.Index("proba123")
+											.Index("books")
 											.AllTypes()
 											.From(0)
 											.Size(50)
@@ -810,10 +835,10 @@ namespace EBook.Controllers
 		public JsonResult DeleteIndex()
 		{
 			var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
-			.DefaultIndex("book");
+			.DefaultIndex("books");
 
 			var client = new ElasticClient(settings);
-			var response = client.DeleteIndex("proba123");
+			var response = client.DeleteIndex("books");
 
 			return Json(response);
 		}
@@ -822,11 +847,11 @@ namespace EBook.Controllers
 		public JsonResult DeleteDocument(int id)
 		{
 			var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
-			.DefaultIndex("book");
+			.DefaultIndex("books");
 
 			var client = new ElasticClient(settings);
 			var response = client.Delete<Book>(id, d => d
-															.Index("proba123")
+															.Index("books")
 															.Type("book")
 														);
 
@@ -836,7 +861,7 @@ namespace EBook.Controllers
 		public JsonResult UpdateIndex(int id)
 		{
 			var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
-			.DefaultIndex("book");
+			.DefaultIndex("books");
 
 			var client = new ElasticClient(settings);
 
@@ -866,7 +891,7 @@ namespace EBook.Controllers
 
 
 			var response = client.UpdateAsync<Book, dynamic>(new DocumentPath<Book>(id), u => u
-			.Index("proba123").Doc(updateFields));
+			.Index("books").Doc(updateFields));
 			
 			return Json(response);
 		}
@@ -874,11 +899,11 @@ namespace EBook.Controllers
 		public IActionResult CreateNewIndex()
 		{
 			var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
-			.DefaultIndex("book");
+			.DefaultIndex("books");
 
 			var client = new ElasticClient(settings);
 
-			var createIndexResponse = client.CreateIndex("proba123", c => c
+			var createIndexResponse = client.CreateIndex("books", c => c
 				 .Settings(s => s
 					  .Analysis(a => a
 							.TokenFilters(t => t
@@ -952,7 +977,7 @@ namespace EBook.Controllers
 								 )
 							)
 							.Analyzers(an => an
-								 .Custom("test1234Analyzer", ca => ca
+								 .Custom("custom_serbian_analyzer", ca => ca
 									  .CharFilters("serbian_analyzer")
 									  .Tokenizer("standard")
 									  .Filters("standard", "lowercase", "serbian_stopwords")
@@ -966,30 +991,30 @@ namespace EBook.Controllers
 							.Properties(p => p
 								 .Text(t => t
 									  .Name(n => n.Title)
-									  .Analyzer("test1234Analyzer")
+									  .Analyzer("custom_serbian_analyzer")
 								 ).Text(t => t
 									  .Name(n => n.Keywords)
-									  .Analyzer("test1234Analyzer")
+									  .Analyzer("custom_serbian_analyzer")
 								 ).Text(t => t
 									  .Name(n => n.Language.Name)
-									  .Analyzer("test1234Analyzer")
+									  .Analyzer("custom_serbian_analyzer")
 								 ).Text(t => t
 									  .Name(n => n.MIME)
-									  .Analyzer("test1234Analyzer")
+									  .Analyzer("custom_serbian_analyzer")
 								 ).Date(t => t
 									  .Name(n => n.PublicationYear)
 								 ).Text(t => t
 									  .Name(n => n.FileName)
-									  .Analyzer("test1234Analyzer")
+									  .Analyzer("custom_serbian_analyzer")
 								 ).Text(t => t
 									  .Name(n => n.Category.Name)
-									  .Analyzer("test1234Analyzer")
+									  .Analyzer("custom_serbian_analyzer")
 								 ).Text(t => t
 									  .Name(n => n.Author)
-									  .Analyzer("test1234Analyzer")
+									  .Analyzer("custom_serbian_analyzer")
 								 ).Text(t => t
 									  .Name(n => n.Body)
-									  .Analyzer("test1234Analyzer")
+									  .Analyzer("custom_serbian_analyzer")
 								 )
 							)
 					  )

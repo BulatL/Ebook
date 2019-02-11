@@ -34,6 +34,7 @@ namespace EBook.Services
 			Category category = new Category { Id = id };
 			_context.Entry(category).State = EntityState.Deleted;
 			_context.SaveChanges();
+			
 		}
 
 		public IEnumerable<Category> GetAllCategoris()
@@ -48,7 +49,20 @@ namespace EBook.Services
 
 		public Category Update(Category category)
 		{
-			_context.Attach(category).State = EntityState.Modified;
+			var local = _context.Set<Category>()
+			 .Local
+			 .FirstOrDefault(entry => entry.Id.Equals(category.Id));
+
+			// check if local is not null 
+			if (local != null) // I'm using a extension method
+			{
+				// detach
+				_context.Entry(local).State = EntityState.Detached;
+			}
+			// set Modified flag in your entry
+			_context.Entry(category).State = EntityState.Modified;
+
+			// save 
 			_context.SaveChanges();
 			return category;
 		}

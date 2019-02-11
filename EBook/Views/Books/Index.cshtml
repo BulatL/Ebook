@@ -1,4 +1,4 @@
-﻿@model IEnumerable<EBook.Models.Book>
+﻿@model IEnumerable<EBook.viewModel.BookIndexViewModel>
 
 @{
 	ViewData["Title"] = "Index";
@@ -13,7 +13,7 @@
 <p>
 	<label>Category</label>
 	<div id="mainselection">
-		<select asp-items="ViewBag.Category" style="width:20em;"></select>
+		<select asp-items="ViewBag.Category" id="categorySelect" style="width:20em;"></select>
 	</div>
 </p>
 <table class="table">
@@ -49,10 +49,10 @@
 			<th>
 				Details
 			</th>
-			<th class="download">
+			<th class="delete">
 				Delete
 			</th>
-			<th class="delete">
+			<th class="download">
 				Download
 			</th>
 			<th id="RegisterHeader">
@@ -61,6 +61,14 @@
 		</tr>
 	</thead>
 	<tbody>
+		@if(Model.Count() == 0)
+		{
+			<tr>
+				<td colspan="10" style="text-align:center">
+					<h2>No results for selected category</h2>
+				</td>
+			</tr>
+		}
 		@foreach (var item in Model)
 		{
 			<tr>
@@ -98,7 +106,14 @@
 					<a class="delete" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
 				</td>
 				<td class="download">
-					<a class="download" asp-action="Download" asp-route-filename="@item.FileName">Download</a>
+					@if (item.Download == true)
+					{
+						<a class="download" asp-action="Download" asp-route-id="@item.Id">Download</a>
+					}
+					@if (item.Download == false)
+					{
+						<p>You are not subcribed for this category</p>
+					}
 				</td>
 				<td>
 					<a class="register" asp-action="Register" asp-controller="User">Register</a>

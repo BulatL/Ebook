@@ -28,6 +28,7 @@ namespace EBook.ViewModels
 		public int CategoryId { get; set; }
 		[Required]
 		public int LanguageId { get; set; }
-		
+		public string OldfFilename { get; set; }
+
 	}
 }

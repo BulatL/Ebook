@@ -64,9 +64,35 @@ namespace EBook.Services
 
 		public User Update(User user)
 		{
-			_context.Attach(user).State = EntityState.Modified;
+			var local = _context.Set<User>()
+			 .Local
+			 .FirstOrDefault(entry => entry.Id.Equals(user.Id));
+
+			// check if local is not null 
+			if (local != null) // I'm using a extension method
+			{
+				// detach
+				_context.Entry(local).State = EntityState.Detached;
+			}
+			// set Modified flag in your entry
+			_context.Entry(user).State = EntityState.Modified;
+
+			// save 
 			_context.SaveChanges();
 			return user;
+		}
+
+		public void SetDefaultCategory(int categoryId)
+		{
+			List<User> users = _context.User.Where(u => u.SubscribedCategorieId == categoryId).ToList();
+			foreach (User user in users)
+			{
+				if(user.SubscribedCategorieId == categoryId)
+				{
+					user.SubscribedCategorieId = 1;
+					Update(user);
+				}
+			}
 		}
 	}
 }

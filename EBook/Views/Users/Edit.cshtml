@@ -1,4 +1,4 @@
-﻿@model EBook.ViewModels.UserViewModel
+﻿@model EBook.ViewModels.EditUserViewModel
 @{
     ViewData["Title"] = "Edit";
 }
@@ -42,10 +42,11 @@
 					<span asp-validation-for="SubscribedCategorieAll" class="text-danger"></span>
 				</div>
 		 	<input type="hidden" asp-for="Id" />
+		 	<input type="hidden" asp-for="Password" />
 		 	<div class="form-group">
 		 		<input type="submit" value="Save" class="btn btn-primary" />
 		 	</div>
-		 	<a asp-action="ChangePassword" asp-route-id="@Model.Id">Change password</a>
+		 	<a asp-action="ChangePassword" asp-route-id="@ViewBag.Id">Change password</a>
 		 </form>
     </div>
 </div>

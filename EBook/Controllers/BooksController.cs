@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Hosting;
 using EBook.ViewModels;
 using iTextSharp.text.pdf;
 using iTextSharp.text.pdf.parser;
+using Newtonsoft.Json;
+using EBook.viewModel;
 
 namespace EBook.Controllers
 {
@@ -36,61 +38,145 @@ namespace EBook.Controllers
       }
 
       // GET: Books
-		[Route("[controller]/{id?}")]
-      public IActionResult Index(int? id)
+		[Route("[controller]")]
+      public IActionResult Index()
       {
 			var loggedInUserId = HttpContext.Session.GetString("LoggedInUserId");
-			List<Book> books = new List<Book>();
-			int categorySelectId = 1;
-			if(id != null)
+
+			string downloadCategory = "none";
+
+			if (loggedInUserId != null)
 			{
-				categorySelectId = int.Parse(id.ToString());
+				User user = _userManager.GetById(int.Parse(loggedInUserId));
+
+				if (user != null)
+				{
+					if (user.Role == Role.Admin)
+						downloadCategory = "all";
+					else
+					{
+						if (user.SubscribedCategorieId == null)
+							downloadCategory = "all";
+						else
+							downloadCategory = user.SubscribedCategorieId.ToString();
+					}	
+				}
 			}
+
+			List<BookIndexViewModel> books = BookIndexViewModel.CopyList(_bookManager.GetAllBooks().ToList(), downloadCategory);
+			
+			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name");
+			return View(books);
+
+
+			/*List<Book> books = new List<Book>();
+	
 			if (loggedInUserId == null)
 			{
-				if (id != null)
-					books.AddRange(_bookManager.GetBooksByCategory(categorySelectId));
-				else
-					books.AddRange(_bookManager.GetAllBooks());
-				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", categorySelectId);
+				books.AddRange(_bookManager.GetAllBooks());
+				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name");
 				return View(books);
 			}
 			User user = _userManager.GetById(int.Parse(loggedInUserId));
 			
 			if (user == null)
 			{
-				if (id != null)
-					books.AddRange(_bookManager.GetBooksByCategory(categorySelectId));
-				else
-					books.AddRange(_bookManager.GetAllBooks());
-				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", categorySelectId);
+				books.AddRange(_bookManager.GetAllBooks());
+				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name");
 				return View(books);
 			}
 			if(user.SubscribedCategorieId != null)
 			{
-				if (id != null)
-					books.AddRange(_bookManager.GetBooksByCategory(categorySelectId));
+				int categoryId = 1;
+				if (user.SubscribedCategorieId != null)
+				{
+					categoryId = int.Parse(user.SubscribedCategorieId.ToString());
+					books.AddRange(_bookManager.GetBooksByCategory(categoryId));
+				}
 				else
 					books.AddRange(_bookManager.GetBooksByCategory(int.Parse(user.SubscribedCategorieId.ToString())));
 				List<Category> categories = new List<Category>();
 				Category category = _categoryManager.GetById(int.Parse(user.SubscribedCategorieId.ToString()));
 				categories.Add(category);
-				ViewData["Category"] = new SelectList(categories, "Id", "Name");
+				ViewData["Category"] = new SelectList(categories, "Name", "Name", categoryId);
 				return View(books);
 			}
 			else
 			{
-				if (id != null)
-					books.AddRange(_bookManager.GetBooksByCategory(categorySelectId));
-				else
-					books.AddRange(_bookManager.GetAllBooks());
-				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", categorySelectId);
+				books.AddRange(_bookManager.GetAllBooks());
+				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name");
 				return View(books);
-			}
-      }
+			}*/
 
-      // GET: Books/Details/5
-      public IActionResult Details(int? id)
+		}
+
+		[Route("[controller]/{name}")]
+		public IActionResult GetByCategory(string name)
+		{
+			var loggedInUserId = HttpContext.Session.GetString("LoggedInUserId");
+
+			string downloadCategory = "none";
+
+			if (loggedInUserId != null)
+			{
+				User user = _userManager.GetById(int.Parse(loggedInUserId));
+
+				if (user != null)
+				{
+					if (user.SubscribedCategorieId == null)
+						downloadCategory = "all";
+					else
+						downloadCategory = user.SubscribedCategorieId.ToString();
+				}
+			}
+
+			List<BookIndexViewModel> books = BookIndexViewModel.CopyList(_bookManager.GetBooksByCategoryName(name).ToList(), downloadCategory);
+
+			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name", name);
+			return View("Index", books);
+
+			/*List<Book> books = new List<Book>();
+			string categorySelectName = "";
+
+			if (loggedInUserId == null)
+			{
+				books.AddRange(_bookManager.GetBooksByCategoryName(name));
+				categorySelectName = books.FirstOrDefault(b => b.Category.Name == name).Category.Name;
+				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name", categorySelectName);
+				return View("Index", books);
+			}
+			User user = _userManager.GetById(int.Parse(loggedInUserId));
+
+			if (user == null)
+			{
+				books.AddRange(_bookManager.GetAllBooks());
+				categorySelectName = books.FirstOrDefault(b => b.Category.Name == name).Category.Name;
+				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name", categorySelectName);
+				return View("Index", books);
+			}
+			else if (user.SubscribedCategorieId != null)
+			{
+				books.AddRange(_bookManager.GetBooksByCategoryName(name));
+				categorySelectName = books.FirstOrDefault(b => b.Category.Name == name).Category.Name;
+
+				List<Category> categories = new List<Category>();
+				Category category = _categoryManager.GetById(int.Parse(user.SubscribedCategorieId.ToString()));
+				categories.Add(category);
+				ViewData["Category"] = new SelectList(categories, "Name", "Name", categorySelectName);
+				return View("Index", books);
+			}
+			else
+			{
+				books.AddRange(_bookManager.GetBooksByCategoryName(name));
+				categorySelectName = books.FirstOrDefault(b => b.Category.Name == name).Category.Name;
+
+				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name", categorySelectName);
+				return View("Index",books);
+			}*/
+		}
+
+		// GET: Books/Details/5
+		public IActionResult Details(int? id)
       {
          if (id == null)
          {
@@ -119,10 +205,13 @@ namespace EBook.Controllers
       // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
       [HttpPost]
       [ValidateAntiForgeryToken]
-      public async Task<IActionResult> Create(BookViewModel bookView)
+      public IActionResult Create(BookViewModel bookView)
       {
          if (ModelState.IsValid)
          {
+				UploadPdf(bookView.FileName, bookView.BookFile, true);
+				DeletePdf(_hostingEnvironment.WebRootPath + "/uploads/" + bookView.OldfFilename);
+				
 				Book book = new Book()
 				{
 					Author = bookView.Author,
@@ -137,7 +226,7 @@ namespace EBook.Controllers
 				};
 				_bookManager.Create(book);
 				ElasticsearchController elasticSearchController = new ElasticsearchController(_hostingEnvironment, _bookManager);
-				await elasticSearchController.IndexBook(book);
+				elasticSearchController.IndexBook(book);
             return RedirectToAction(nameof(Index));
          }
          ViewData["CategoryId"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", bookView.CategoryId);
@@ -146,20 +235,15 @@ namespace EBook.Controllers
       }
 
       // GET: Books/Edit/5
-      public IActionResult Edit(int? id)
+      public IActionResult Edit(int id)
       {
-         if (id == null)
-         {
-               return NotFound();
-         }
-
-			var book = _bookManager.GetAllBooks();
+			Book book = _bookManager.GetById(id);
          if (book == null)
          {
                return NotFound();
 			}
-			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name");
-			ViewData["Language"] = new SelectList(_languageManager.GetAllLanguages(), "Id", "Name");
+			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", book.CategoryId);
+			ViewData["Language"] = new SelectList(_languageManager.GetAllLanguages(), "Id", "Name", book.LanguageId);
 			return View(book);
       }
 
@@ -177,6 +261,11 @@ namespace EBook.Controllers
 
          if (ModelState.IsValid)
          {
+				Book oldBook = _bookManager.GetById(id);
+				if(oldBook.FileName != book.FileName)
+				{
+					DeletePdf(_hostingEnvironment.WebRootPath + "uploads/" + oldBook.FileName);
+				}
             _bookManager.Update(book);
 
 				ElasticsearchController elasticSearchController = new ElasticsearchController(_hostingEnvironment, _bookManager);
@@ -184,8 +273,8 @@ namespace EBook.Controllers
 
 				return RedirectToAction(nameof(Index));
 			}
-			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name");
-			ViewData["Language"] = new SelectList(_languageManager.GetAllLanguages(), "Id", "Name");
+			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", book.CategoryId);
+			ViewData["Language"] = new SelectList(_languageManager.GetAllLanguages(), "Id", "Name", book.LanguageId);
 			return View(book);
       }
 
@@ -197,7 +286,7 @@ namespace EBook.Controllers
                return NotFound();
          }
 
-			var book = _bookManager.GetAllBooks();
+			var book = _bookManager.GetById(int.Parse(id.ToString()));
          if (book == null)
          {
                return NotFound();
@@ -211,10 +300,14 @@ namespace EBook.Controllers
       [ValidateAntiForgeryToken]
       public IActionResult DeleteConfirmed(int id)
       {
+			Book book = _bookManager.GetById(id);
 			_bookManager.Delete(id);
 
 			ElasticsearchController elasticSearchController = new ElasticsearchController(_hostingEnvironment, _bookManager);
 			elasticSearchController.DeleteDocument(id);
+			
+			string path = _hostingEnvironment.WebRootPath + "/uploads/" + book.FileName;
+			DeletePdf(path);
 
 			return RedirectToAction(nameof(Index));
       }
@@ -222,8 +315,11 @@ namespace EBook.Controllers
 		[HttpPost]
 		public IActionResult ReadMetadata(IFormFile pdf)
 		{
-			string fileName = UploadPdf(pdf.FileName, pdf);
-			string filePath = System.IO.Path.Combine(_hostingEnvironment.WebRootPath, "uploads/" + fileName);
+			string bookName = UploadPdf(pdf.FileName, pdf, false);
+			string randomFilname = bookName.Split("&")[0];
+			string filename = bookName.Split("&")[1];
+
+			string filePath = System.IO.Path.Combine(_hostingEnvironment.WebRootPath, "uploads/" + randomFilname);
 
 			PdfReader reader = new PdfReader(filePath);
 
@@ -237,15 +333,20 @@ namespace EBook.Controllers
 
 			reader.Close();
 
-			return Json(title + "^" + authror + "^" + keywords + "^" + creationDate + "^" + fileName + "^" + pdf.ContentType);
+			return Json(title + "^" + authror + "^" + keywords + "^" + creationDate + "^" + filename + "^" + pdf.ContentType + "^" + randomFilname);
 		}
 
-		public async Task<IActionResult> Download(string filename)
+		public async Task<IActionResult> Download(int id)
 		{
-			if (filename == null)
-				return Content("filename not present");
+			Book book = _bookManager.GetById(id);
 
-			var path = System.IO.Path.Combine(_hostingEnvironment.WebRootPath, "uploads", filename);
+			if (book == null)
+				return NotFound();
+
+			if (book.FileName == null)
+				return NotFound();
+
+			var path = System.IO.Path.Combine(_hostingEnvironment.WebRootPath, "uploads", book.FileName);
 
 			var memory = new MemoryStream();
 			using (var stream = new FileStream(path, FileMode.Open))
@@ -256,16 +357,26 @@ namespace EBook.Controllers
 			return File(memory, "application/pdf", System.IO.Path.GetFileName(path));
 		}
 
-		public string UploadPdf(string bookName, IFormFile pdf)
+		public string UploadPdf(string bookName, IFormFile pdf, bool createPdf)
 		{
-			string fn = bookName.Replace(" ", "");
-			var fileName = fn;
+			string filename = "";
+			if (createPdf == true)
+				filename = bookName;
+			else
+				filename = System.IO.Path.GetRandomFileName();
 			var uploads = System.IO.Path.Combine(_hostingEnvironment.WebRootPath, "uploads");
-			var filePath = System.IO.Path.Combine(uploads, fileName);
+			var filePath = System.IO.Path.Combine(uploads, filename);
 			FileStream fs = new FileStream(filePath, FileMode.Create);
 			pdf.CopyTo(fs);
 			fs.Close();
-			return fileName;
+			string returnString = filename + "&" + bookName;
+			return returnString;
+		}
+
+		public void DeletePdf(string path)
+		{
+			System.IO.File.Delete(path);
+			return;
 		}
 	}
 }

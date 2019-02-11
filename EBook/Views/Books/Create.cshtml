@@ -53,6 +53,7 @@
 			<div class="form-group">
 				<label asp-for="BookFile" class="control-label"></label>
 				<input asp-for="BookFile" id="PdfUpload" class="form-control" type="file" accept="application/pdf" />
+				<input type="hidden" asp-for="OldfFilename" id="oldfFilename" />
 			</div>
 			<div class="form-group">
 				<input type="submit" value="Create" class="btn btn-primary" />

@@ -41,11 +41,14 @@ function ajaxCall(pdf) {
 			let publicationYearInput = $("#publicationYear");
 			let filenameInput = $("#filename");
 			let mimeInput = $("#mime");
+			let oldfFilename = $("#oldfFilename");
 
 
 			var res = data.split("^");
 			for (var i = 0; i < res.length; i++) {
 				console.log(res[i]);
+				console.log(i);
+				console.log("///////////////////////////////////////////////////////")
 				if (i == 0) {
 					titleInput.val(res[i]);
 				}
@@ -61,12 +64,16 @@ function ajaxCall(pdf) {
 				else if (i == 4) {
 					filenameInput.val(res[i]);
 				}
-				else {
+				else if (i == 5) {
 					mimeInput.val(res[i]);
 					mimeInput.attr("readonly", true);
 				}
+				else {
+					console.log("usao");
+					console.log(res[i]);
+					oldfFilename.val(res[i]);
+				}
 			}
-			console.log(data);
 		})
 		.fail(function (jqXhr, textStatus, errorThrown) {
 			if (errorThrown === "abort") {

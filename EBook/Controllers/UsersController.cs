@@ -95,11 +95,10 @@ namespace EBook.Controllers
 				return StatusCode(401);
 			}
 
-			if(loggedInUser.Id != id)
-			{
-				if(loggedInUser.Role == Role.Subscriber)
+			if (loggedInUser.Id != id)
+				if (loggedInUser.Role == Role.Subscriber)
 					return StatusCode(401);
-			}
+
 			User user = _manager.GetById(id);
 
 			if (user == null)
@@ -107,22 +106,9 @@ namespace EBook.Controllers
                return NotFound();
          }
 
-			UserViewModel model = new UserViewModel()
-			{
-				Firstname = user.Firstname,
-				Lastname = user.Lastname,
-				Password = user.Password,
-				Role = user.Role,
-				Username = user.Username
-			};
-			if (user.SubscribedCategorieId == null)
-			{
-				model.SubscribedCategorieAll = true;
-			}
-			else
-			{
-				model.SubscribedCategorieId = int.Parse(user.SubscribedCategorieId.ToString());
-			}
+			EditUserViewModel model = new EditUserViewModel(user);
+
+			ViewData["Id"] = id;
 			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", model.SubscribedCategorieId);
 			return View(model);
       }
@@ -132,7 +118,7 @@ namespace EBook.Controllers
       // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
       [HttpPost]
       [ValidateAntiForgeryToken]
-      public IActionResult Edit(int id, UserViewModel model)
+      public IActionResult Edit(int id, EditUserViewModel model)
 		{
 			User loggedInUser = GetLoggedInUser();
 
@@ -141,52 +127,31 @@ namespace EBook.Controllers
          
 			if (loggedInUser == null)
 				return StatusCode(401);
-			
-			if (loggedInUser.Role == Role.Subscriber || loggedInUser.Id != id)
-				return StatusCode(401);
-			
+
+			if (loggedInUser.Id != id)
+				if (loggedInUser.Role == Role.Subscriber)
+					return StatusCode(401);
+
 			if (ModelState.IsValid)
          {
-            try
-            {
-					User exist = _manager.GetByUsername(model.Username);
-					if (exist != null)
+				User exist = _manager.GetByUsername(model.Username);
+				if (exist != null)	
+				{
+					if(exist.Id != id)
 					{
-						if(exist.Id == id)
-						{
-							ModelState.AddModelError("Username", "Username already taken");
-							return View(model);
-					}
-					}
-					User user = new User()
-					{
-						Firstname = model.Firstname,
-						Lastname = model.Lastname,
-						Password = model.Password,
-						Role = model.Role,
-						SubscribedCategorieId = model.SubscribedCategorieId,
-						Username = model.Username
-					};
-					if (model.SubscribedCategorieAll == true)
-					{
-						user.SubscribedCategorieId = null;
-					}
-					_manager.Update(user);
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-               if (!_manager.Exist(model.Id))
-               {
-                  return NotFound();
-               }
-               else
-               {
-                  throw;
-               }
-            }
+						ModelState.AddModelError("Username", "Username already taken");
+						ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", model.SubscribedCategorieId);
+						return View(model);
+				}
+				}
+				User user = EditUserViewModel.ViewToUser(model);
+					
+				_manager.Update(user);
+
             return RedirectToAction(nameof(Index));
          }
-         return View(model);
+			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Id", "Name", model.SubscribedCategorieId);
+			return View(model);
       }
 
       // GET: Users/Delete/5
@@ -197,8 +162,9 @@ namespace EBook.Controllers
 			if (loggedInUser == null)
 				return StatusCode(401);
 
-			if (loggedInUser.Role == Role.Subscriber || loggedInUser.Id != id)
-				return StatusCode(401);
+			if (loggedInUser.Id != id)
+				if (loggedInUser.Role == Role.Subscriber)
+					return StatusCode(401);
 
 			User user = _manager.GetById(id);
 
@@ -220,8 +186,9 @@ namespace EBook.Controllers
 			if (loggedInUser == null)
 				return StatusCode(401);
 
-			if (loggedInUser.Role == Role.Subscriber || loggedInUser.Id != id)
-				return StatusCode(401);
+			if (loggedInUser.Id != id)
+				if (loggedInUser.Role == Role.Subscriber)
+					return StatusCode(401);
 
 			_manager.Delete(id);
          return RedirectToAction(nameof(Index));
@@ -261,8 +228,9 @@ namespace EBook.Controllers
 			if (loggedInUser == null)
 				return StatusCode(401);
 
-			if (loggedInUser.Role == Role.Subscriber || loggedInUser.Id != id)
-				return StatusCode(401);
+			if (loggedInUser.Id != id)
+				if (loggedInUser.Role == Role.Subscriber)
+					return StatusCode(401);
 
 			ViewData["Id"] = id;
 			return View();
@@ -279,8 +247,9 @@ namespace EBook.Controllers
 			if (loggedInUser == null)
 				return StatusCode(401);
 
-			if (loggedInUser.Role == Role.Subscriber || loggedInUser.Id != id)
-				return StatusCode(401);
+			if (loggedInUser.Id != id)
+				if (loggedInUser.Role == Role.Subscriber)
+					return StatusCode(401);
 
 			user.Password = newPassword;
 			_manager.Update(user);

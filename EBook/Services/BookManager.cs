@@ -29,7 +29,7 @@ namespace EBook.Services
 			if (id == 0)
 				return;
 
-			Book book = new Book { Id = id };
+			Book book = GetById(id);
 			_context.Entry(book).State = EntityState.Deleted;
 			_context.SaveChanges();
 		}
@@ -42,6 +42,11 @@ namespace EBook.Services
 		public IEnumerable<Book> GetBooksByCategory(int id)
 		{
 			return _context.Book.Where(b => b.CategoryId == id).Include(b => b.Category).Include(b => b.Language);
+		}
+
+		public IEnumerable<Book> GetBooksByCategoryName(string name)
+		{
+			return _context.Book.Where(b => b.Category.Name == name).Include(b => b.Category).Include(b => b.Language);
 		}
 
 		public IEnumerable<Book> GetBooksByLanguage(int id)
@@ -64,9 +69,48 @@ namespace EBook.Services
 										.Include(b => b.Category).Include(b => b.Language);
 		}
 
+		public void SetDefaultCateogry(int categoryId)
+		{
+			List<Book> books = _context.Book.Where(b => b.CategoryId == categoryId).ToList();
+			foreach (Book book in books)
+			{
+				if(book.CategoryId == categoryId)
+				{
+					book.CategoryId = 1;
+					Update(book);
+				}
+			}
+		}
+
+		public void setDefaultLangauge(int lanugageId)
+		{
+			List<Book> books = _context.Book.Where(b => b.LanguageId == lanugageId).ToList();
+			foreach (Book book in books)
+			{
+				if(book.LanguageId == lanugageId)
+				{
+					book.LanguageId = 1;
+					Update(book);
+				}
+			}
+		}
+
 		public Book Update(Book book)
 		{
-			_context.Attach(book).State = EntityState.Modified;
+			var local = _context.Set<Book>()
+			 .Local
+			 .FirstOrDefault(entry => entry.Id.Equals(book.Id));
+
+			// check if local is not null 
+			if (local != null) // I'm using a extension method
+			{
+				// detach
+				_context.Entry(local).State = EntityState.Detached;
+			}
+			// set Modified flag in your entry
+			_context.Entry(book).State = EntityState.Modified;
+
+			// save 
 			_context.SaveChanges();
 			return book;
 		}

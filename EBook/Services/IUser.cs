@@ -16,5 +16,6 @@ namespace EBook.Services
 		User Create(User user);
 		User Update(User user);
 		void Delete(int id);
+		void SetDefaultCategory(int categoryId);
 	}
 }
