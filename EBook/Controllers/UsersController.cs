@@ -29,7 +29,12 @@ namespace EBook.Controllers
       // GET: Users
       public IActionResult Index()
       {
-			List<User> users = _manager.GetAllUsers().ToList();
+         var loggedInUserId = HttpContext.Session.GetString("LoggedInUserId");
+
+         if(loggedInUserId == null)
+            return RedirectToAction("Index", "Home", new { area = "" });
+
+         List<User> users = _manager.GetAllUsers().ToList();
          return View(users);
       }
 
@@ -81,7 +86,7 @@ namespace EBook.Controllers
 					user.SubscribedCategorieId = null;
 				}
             _manager.Create(user);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index", "Home", new { area = "" });
          }
          return View(model);
       }
@@ -214,7 +219,7 @@ namespace EBook.Controllers
 			HttpContext.Session.SetString("LoggedInUserId", user.Id.ToString());
 			HttpContext.Session.SetString("LoggedInUserRole", user.Role.ToString());
 			
-			return RedirectToAction(nameof(HomeController.Index));
+			return RedirectToAction(nameof(BooksController.Index));
 		}
 
 		[HttpGet]
@@ -264,8 +269,8 @@ namespace EBook.Controllers
 			HttpContext.Session.Remove("LoggedInUserId");
 			HttpContext.Session.Remove("LoggedInUserRole");
 
-			return RedirectToAction(nameof(HomeController.Index));
-		}
+         return RedirectToAction("Index", "Home", new { area = "" });
+      }
 
 		[HttpGet]
 		public User GetLoggedInUser()

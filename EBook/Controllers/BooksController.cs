@@ -4,8 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using EBook.Data;
 using EBook.Models;
 using EBook.Services;
 using System.IO;
@@ -13,8 +11,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using EBook.ViewModels;
 using iTextSharp.text.pdf;
-using iTextSharp.text.pdf.parser;
-using Newtonsoft.Json;
 using EBook.viewModel;
 
 namespace EBook.Controllers
@@ -67,47 +63,6 @@ namespace EBook.Controllers
 			
 			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name");
 			return View(books);
-
-
-			/*List<Book> books = new List<Book>();
-	
-			if (loggedInUserId == null)
-			{
-				books.AddRange(_bookManager.GetAllBooks());
-				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name");
-				return View(books);
-			}
-			User user = _userManager.GetById(int.Parse(loggedInUserId));
-			
-			if (user == null)
-			{
-				books.AddRange(_bookManager.GetAllBooks());
-				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name");
-				return View(books);
-			}
-			if(user.SubscribedCategorieId != null)
-			{
-				int categoryId = 1;
-				if (user.SubscribedCategorieId != null)
-				{
-					categoryId = int.Parse(user.SubscribedCategorieId.ToString());
-					books.AddRange(_bookManager.GetBooksByCategory(categoryId));
-				}
-				else
-					books.AddRange(_bookManager.GetBooksByCategory(int.Parse(user.SubscribedCategorieId.ToString())));
-				List<Category> categories = new List<Category>();
-				Category category = _categoryManager.GetById(int.Parse(user.SubscribedCategorieId.ToString()));
-				categories.Add(category);
-				ViewData["Category"] = new SelectList(categories, "Name", "Name", categoryId);
-				return View(books);
-			}
-			else
-			{
-				books.AddRange(_bookManager.GetAllBooks());
-				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name");
-				return View(books);
-			}*/
-
 		}
 
 		[Route("[controller]/{name}")]
@@ -134,45 +89,6 @@ namespace EBook.Controllers
 
 			ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name", name);
 			return View("Index", books);
-
-			/*List<Book> books = new List<Book>();
-			string categorySelectName = "";
-
-			if (loggedInUserId == null)
-			{
-				books.AddRange(_bookManager.GetBooksByCategoryName(name));
-				categorySelectName = books.FirstOrDefault(b => b.Category.Name == name).Category.Name;
-				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name", categorySelectName);
-				return View("Index", books);
-			}
-			User user = _userManager.GetById(int.Parse(loggedInUserId));
-
-			if (user == null)
-			{
-				books.AddRange(_bookManager.GetAllBooks());
-				categorySelectName = books.FirstOrDefault(b => b.Category.Name == name).Category.Name;
-				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name", categorySelectName);
-				return View("Index", books);
-			}
-			else if (user.SubscribedCategorieId != null)
-			{
-				books.AddRange(_bookManager.GetBooksByCategoryName(name));
-				categorySelectName = books.FirstOrDefault(b => b.Category.Name == name).Category.Name;
-
-				List<Category> categories = new List<Category>();
-				Category category = _categoryManager.GetById(int.Parse(user.SubscribedCategorieId.ToString()));
-				categories.Add(category);
-				ViewData["Category"] = new SelectList(categories, "Name", "Name", categorySelectName);
-				return View("Index", books);
-			}
-			else
-			{
-				books.AddRange(_bookManager.GetBooksByCategoryName(name));
-				categorySelectName = books.FirstOrDefault(b => b.Category.Name == name).Category.Name;
-
-				ViewData["Category"] = new SelectList(_categoryManager.GetAllCategoris(), "Name", "Name", categorySelectName);
-				return View("Index",books);
-			}*/
 		}
 
 		// GET: Books/Details/5

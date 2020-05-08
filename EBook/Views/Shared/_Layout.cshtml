@@ -27,35 +27,37 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-						 <ul class="navbar-nav flex-grow-1" id="navUl">
-						 	<li class="nav-item">
-						 		<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-						 	</li>
-						 	<li class="nav-item">
-						 		<a class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Index">Users</a>
-						 	</li>
-						 	<li class="nav-item">
-						 		<a class="nav-link text-dark" asp-area="" asp-controller="Books" asp-action="Index">Books</a>
-						 	</li>
-						 	<li class="nav-item">
-						 		<a class="nav-link text-dark" asp-area="" asp-controller="Categories" asp-action="Index">Categories</a>
-						 	</li>
-						 	<li class="nav-item">
-						 		<a class="nav-link text-dark" asp-area="" asp-controller="Languages" asp-action="Index">Languages</a>
-						 	</li>
-						 	<li class="nav-item">
-						 		<a class="nav-link text-dark" asp-area="" asp-controller="Elasticsearch" asp-action="Index">Search</a>
-						 	</li>
-						 	<li class="nav-item">
-						 		<a id="login" class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Login">Login</a>
-						 	</li>
-						 	<li class="nav-item">
-						 		<a id="logout" class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Logout">Logout</a>
-						 	</li>
-						 	<li class="nav-item">
-						 		<a id="register" class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Register">Register</a>
-						 	</li>
-						 </ul>
+                   <ul class="navbar-nav ml-auto" id="navUl">
+                      <li class="nav-item">
+                         <a id="login" class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Login">Login</a>
+                      </li>
+                      <li class="nav-item">
+                         <a id="logout" class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Logout">Logout</a>
+                      </li>
+                      <li class="nav-item">
+                         <a id="register" class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Register">Register</a>
+                      </li>
+                   </ul>
+
+                   <ul id="loggedInUsersOptions" class="navbar-nav">
+                      <li class="nav-item">
+                         <a class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Index">Users</a>
+                      </li>
+                      <li class="nav-item">
+                         <a class="nav-link text-dark" asp-area="" asp-controller="Categories" asp-action="Index">Categories</a>
+                      </li>
+                      <li class="nav-item">
+                         <a class="nav-link text-dark" asp-area="" asp-controller="Languages" asp-action="Index">Languages</a>
+                      </li>
+                   </ul>
+                   <ul class="navbar-nav">
+                      <li class="nav-item">
+                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                      </li>
+                      <li class="nav-item">
+                         <a class="nav-link text-dark" asp-area="" asp-controller="Elasticsearch" asp-action="Index">Search</a>
+                      </li>
+                   </ul>
                 </div>
             </div>
         </nav>
@@ -69,7 +71,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2018 - EBook - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2018 - EBook - Luka Bulatovic
         </div>
     </footer>
 
@@ -107,9 +109,13 @@
 						$("#logout").hide();
 						$("#createNew").hide();
 						$("#editUser").hide();
+						$("#createNew").hide();
+                  $("#editUser").hide();
 					}
-					else {
-						console.log(response);
+               else {
+                  if(response.role == 0)
+                     $("#loggedInUsersOptions").css("display", "flex");
+
 						let pathname = window.location.pathname.toLowerCase();
 						let pathId = "/users/details/" + response.id;
 						let navUl = $("#navUl");
@@ -128,7 +134,7 @@
 							}
 						}
 						$("#login").hide();
-						$("#register").hide();
+                  $("#register").hide();
 					}
 				},
 				error: function (response, jqXHR) {
